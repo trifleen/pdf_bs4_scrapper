@@ -59,38 +59,73 @@ python math_pdf_scrapper.py <URL>
 python math_pdf_scrapper.py <URL> -o <output_directory>
 ```
 
-### Examples
+### Custom Pattern Matching
+
+Use the `-p` flag to specify a custom regex pattern for matching PDF URLs:
 
 ```bash
-# Download to default 'downloads' folder
+python math_pdf_scrapper.py <URL> -p "/_media/course.*\.pdf$"
+```
+
+### Filter Unwanted Files
+
+Use the `-r` flag to specify words/patterns to exclude from downloads:
+
+```bash
+python math_pdf_scrapper.py <URL> -r exam solution secret
+```
+
+### Combined Examples
+
+```bash
+# Download to default 'downloads' folder with default settings
 python math_pdf_scrapper.py https://example.com/course-materials
 
-# Download to custom folder
-python math_pdf_scrapper.py https://example.com/course-materials -o my_pdfs
+# Download to custom folder with custom pattern
+python math_pdf_scrapper.py https://example.com/course-materials -o my_pdfs -p ".*\.pdf$"
+
+# Download with custom restrictions (skip files containing "exam" or "solution")
+python math_pdf_scrapper.py https://example.com/course-materials -r exam solution
+
+# Download with no restrictions
+python math_pdf_scrapper.py https://example.com/course-materials -r
+
+# Combine all options
+python math_pdf_scrapper.py https://example.com/course-materials -o pdfs -p "/docs/.*\.pdf$" -r private confidential
 ```
 
 ## Configuration
 
-### Target Pattern
+### Target Pattern (`-p` flag)
 
-By default, the scraper looks for PDFs matching the pattern `/_media/*.pdf`. You can modify this in the code:
+By default, the scraper looks for PDFs matching the pattern `/_media/*.pdf`. You can customize this using the `-p` flag:
 
-```python
-TARGET_PATTERN = re.compile(r"/_media/.*\.pdf$", re.IGNORECASE)
+```bash
+# Match any PDF in any directory
+python math_pdf_scrapper.py <URL> -p ".*\.pdf$"
+
+# Match PDFs in a specific course folder
+python math_pdf_scrapper.py <URL> -p "/_media/tma4412/.*\.pdf$"
+
+# Match PDFs with specific naming pattern
+python math_pdf_scrapper.py <URL> -p "/lectures/lecture_\d+\.pdf$"
 ```
 
-### Restricted Patterns
+### Restricted Patterns (`-r` flag)
 
-Customize which files to skip by editing the `RESTRICTED_PATTERNS` list:
+By default, files containing "plenum", "lf-plenum", or "oving" are skipped. Customize this using the `-r` flag:
 
-```python
-RESTRICTED_PATTERNS = [
-    re.compile(r"plenum", re.IGNORECASE),
-    re.compile(r"lf-plenum", re.IGNORECASE),
-    re.compile(r"oving", re.IGNORECASE),
-    # Add your own patterns here
-]
+```bash
+# Skip files containing "exam" or "solution"
+python math_pdf_scrapper.py <URL> -r exam solution
+
+# Skip files with multiple patterns
+python math_pdf_scrapper.py <URL> -r draft preliminary confidential
+
+# Download everything (no restrictions)
+python math_pdf_scrapper.py <URL> -r
 ```
+
 
 ## How It Works
 
@@ -106,6 +141,8 @@ RESTRICTED_PATTERNS = [
 |----------|-------------|---------|
 | `url` | Page URL to scan for PDF links | Required |
 | `-o, --output-dir` | Directory to save downloaded files | `downloads` |
+| `-p, --pattern` | Regex pattern to match PDF URLs | `/_media/.*\.pdf$` |
+| `-r, --restrict` | Words/patterns to exclude from downloads (space-separated) | `plenum lf-plenum oving` |
 
 ## Error Handling
 

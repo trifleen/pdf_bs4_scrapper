@@ -8,18 +8,9 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
-# Pattern for files we DO want (your original constraint)
-TARGET_PATTERN = re.compile(r"/_media/.*\.pdf$", re.IGNORECASE)
-
-# 🔒 Patterns for filenames we want to SKIP.
-# Add or edit these as you like.
-RESTRICTED_PATTERNS = [
-    re.compile(r"plenum", re.IGNORECASE),
-    re.compile(r"lf-plenum", re.IGNORECASE),
-    re.compile(r"oving", re.IGNORECASE),
-    #re.compile(r"tma4412", re.IGNORECASE),
-    # re.compile(r"secret", re.IGNORECASE),  # example
-]
+# Global variables that will be set from command-line arguments
+TARGET_PATTERN = None
+RESTRICTED_PATTERNS = []
 
 
 def is_restricted(filename: str) -> bool:
@@ -82,8 +73,10 @@ def download_file(file_url: str, output_dir: str):
 
 
 def main():
+    global TARGET_PATTERN, RESTRICTED_PATTERNS
+    
     parser = argparse.ArgumentParser(
-        description="Download all PDF files with pattern '/_media/tma4412/2025h/' from a given URL."
+        description="Download PDF files from a webpage with customizable pattern matching and filtering."
     )
     parser.add_argument("url", help="Page URL to scan for links")
     parser.add_argument(
@@ -92,8 +85,34 @@ def main():
         default="downloads",
         help="Directory to save downloaded files (default: downloads)",
     )
+    parser.add_argument(
+        "-p",
+        "--pattern",
+        default=r"/_media/.*\.pdf$",
+        help="Regex pattern to match PDF URLs (default: /_media/.*\\.pdf$)",
+    )
+    parser.add_argument(
+        "-r",
+        "--restrict",
+        nargs="*",
+        default=["plenum", "lf-plenum", "oving"],
+        help="Words/patterns to exclude from downloads (default: plenum lf-plenum oving)",
+    )
 
     args = parser.parse_args()
+
+    # Set the global TARGET_PATTERN from command-line argument
+    try:
+        TARGET_PATTERN = re.compile(args.pattern, re.IGNORECASE)
+        print(f"[+] Using target pattern: {args.pattern}")
+    except re.error as e:
+        print(f"[!] Invalid regex pattern: {e}")
+        sys.exit(1)
+
+    # Set the global RESTRICTED_PATTERNS from command-line argument
+    RESTRICTED_PATTERNS = [re.compile(word, re.IGNORECASE) for word in args.restrict]
+    if args.restrict:
+        print(f"[+] Restricting files containing: {', '.join(args.restrict)}")
 
     try:
         links = find_matching_links(args.url)
