@@ -19,7 +19,7 @@ A Python-based web scraper for downloading PDF files from web pages with customi
 
 1. Clone this repository:
 ```bash
-git clone pdf_bs4_scrapper
+git clone https://github.com/trifleen/pdf_bs4_scrapper
 cd pdf_bs4_scrapper
 ```
 
